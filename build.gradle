@@ -1,3 +1,4 @@
+
 plugins {
     id 'fabric-loom' version '1.9-SNAPSHOT'
     id 'com.gradleup.shadow' version '8.3.5'
@@ -13,22 +14,29 @@ base {
 
 repositories {
     mavenCentral()
-    // JitPack: tu leży MCProtocolLib 1.21.4-1 (w repo opencollab tej wersji nie ma)
+
+    // Repozytorium OpenCollab dla bibliotek GeyserMC
+    maven {
+        name = 'OpenCollab'
+        url = 'https://repo.opencollab.dev/main/'
+    }
+
+    // JitPack dla MCProtocolLib
     maven {
         name = 'JitPack'
         url = 'https://jitpack.io'
-        content { includeGroupByRegex 'com\\.github\\..*' }
+        content {
+            includeGroupByRegex 'com\\.github\\..*'
+        }
     }
 }
 
 configurations {
-    // Biblioteki "shade" są wpakowane do środka gotowego .jar
     shade
     implementation.extendsFrom shade
 }
 
 configurations.shade {
-    // To wszystko Minecraft już ma - nie dublujemy (inaczej klasy się gryzą).
     exclude group: 'org.slf4j'
     exclude group: 'com.google.code.gson'
     exclude group: 'com.google.guava'
@@ -53,11 +61,9 @@ dependencies {
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-    // Biblioteka protokołu Minecrafta - to ona łączy bota z serwerem
     shade "com.github.GeyserMC:MCProtocolLib:${project.mcprotocollib_version}"
     shade 'net.kyori:adventure-api:4.17.0'
 
-    // Moduły Netty, których Minecraft nie ma (DNS, proxy) - wersja jak w Minecraft 1.21.4
     shade 'io.netty:netty-resolver-dns:4.1.115.Final'
     shade 'io.netty:netty-codec-dns:4.1.115.Final'
     shade 'io.netty:netty-handler-proxy:4.1.115.Final'
@@ -67,14 +73,15 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", project.version
+    inputs.property "version", project.mod_version
+
     filesMatching("fabric.mod.json") {
-        expand "version": inputs.properties.version
+        expand "version": project.mod_version
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
-    it.options.release = 21
+    options.release = 21
 }
 
 java {
